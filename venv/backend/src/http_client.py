@@ -1,6 +1,6 @@
 from aiohttp import ClientSession
 from pydantic_settings import BaseSettings, SettingsConfigDict
-
+from async_lru import alru_cache
 # Настройки
 class Settings(BaseSettings):
     CMC_API_TOKEN: str
@@ -22,11 +22,12 @@ class HTTPClient:
 
 # CoinMarketCap HTTP-клиент
 class CMCHTTPClient(HTTPClient):
+    @alru_cache
     async def get_listings(self):
         async with self._session.get(f"{self.base_url}/v1/cryptocurrency/listings/latest") as resp:
             result = await resp.json()  # Дождаться результата
             return result["data"]
-
+    @alru_cache
     async def get_currency(self, currency_id: int):
         async with self._session.get(
             f"{self.base_url}/v2/cryptocurrency/quotes/latest",
